@@ -1,0 +1,62 @@
+<script setup lang="ts">
+const socials = [
+  {
+    icon: 'mdi-facebook',
+    href: 'https://www.facebook.com/panuteknolojii/',
+    color: '#0866ff'
+  },
+  {
+    icon: 'mdi-twitter', href: 'https://twitter.com/panuteknoloji', color: '#1da1f2'
+  },
+  {
+    icon: 'mdi-linkedin',
+    href: 'https://www.linkedin.com/company/panu-teknoloji-ltd-sti/?originalSubdomain=tr',
+    color: '#4267b2'
+  },
+  {
+    icon: 'mdi-instagram',
+    href: 'https://www.instagram.com/panuteknoloji/?hl=tr',
+    class: 'instagram'
+  },
+  {
+    icon: 'mdi-youtube',
+    href: 'https://www.youtube.com/channel/UCy1M15JA5g_zMuBh_-fu5mw',
+    color: '#cd201f'
+  }
+];
+</script>
+
+<template>
+  <v-footer class="text-center d-flex flex-column ga-2 py-4">
+    <div class="d-flex ga-3">
+      <v-btn
+        v-for="social in socials"
+        :key="social.icon"
+        :icon="social.icon"
+        :href="social.href"
+        :color="social.color"
+        :class="social.class"
+        target="_blank"
+        density="comfortable"
+        variant="text"
+      ></v-btn>
+    </div>
+
+    <v-divider thickness="2" width="50" />
+
+    <v-divider />
+
+    <div>&copy; {{ new Date().getFullYear() }} — <strong style="letter-spacing: 0.1em" class="panu-font">Panu</strong> &trade;</div>
+  </v-footer>
+</template>
+
+<style scoped>
+.instagram {
+  background: radial-gradient(circle at 30% 110%,
+  #ffdb8b 0%,
+  #ee653d 25%,
+  #d42e81 50%,
+  #a237b6 75%,
+  #3e57bc 100%);
+}
+</style>

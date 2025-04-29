@@ -1,85 +1,71 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { RouterView } from 'vue-router';
+import { VIconBtn } from 'vuetify/labs/components';
+import { computed, ref } from 'vue';
+import NavigationDrawer from '@/components/NavigationDrawer.vue';
+import MyFooter from '@/components/MyFooter.vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+
+const breadcrumbs = computed(() => {
+  const fullPath = route.hash ? route.hash.substring(1) : route.path;
+
+  const pathSegments = fullPath
+    .split('/')
+    .filter(part => part);
+
+  return pathSegments.map((segment, index) => {
+    const path = `/#/${pathSegments.slice(0, index + 1).join('/')}`;
+
+    return {
+      title: decodeURIComponent(segment),
+      href: path
+    };
+  });
+});
+
+const rail = ref(true);
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <v-app>
+    <v-layout>
+      <NavigationDrawer :rail="rail" />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <v-app-bar scroll-behavior="elevate collapse">
+        <v-icon-btn class="mr-3" :icon="rail ? 'mdi-menu-close' : 'mdi-menu-open'"
+                    @click="rail = !rail" />
+        <v-app-bar-title>
+          <span class="panu-font" style="color: var(--color-panu)">Panu</span><span
+          class="panu-font font-italic">Net</span> &nbsp; <strong
+          class="rounded version-text">V2</strong>
+        </v-app-bar-title>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+        <v-breadcrumbs :items="breadcrumbs" />
+      </v-app-bar>
+      <v-main>
+        <v-container>
+          <RouterView />
+        </v-container>
+      </v-main>
+    </v-layout>
+  </v-app>
+  <MyFooter />
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.version-text {
+  box-shadow: rgba(255, 221, 0, 0.4) -5px 5px,
+  rgba(255, 221, 0, 0.3) -10px 10px,
+  rgba(255, 221, 0, 0.2) -15px 15px,
+  rgba(255, 221, 0, 0.1) -20px 20px,
+  rgba(255, 221, 0, 0.05) -25px 25px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.version-text:hover {
+  transform: scale(1.05);
 }
 </style>
