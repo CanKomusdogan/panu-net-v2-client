@@ -2,11 +2,14 @@
 
 import { computed, onMounted, ref } from 'vue';
 import type { User } from '@/types/User.ts';
-import { VIconBtn } from 'vuetify/labs/VIconBtn';
 import RoleIconsInfo from '@/components/RoleIconsInfo.vue';
 
 defineProps<{
   rail: boolean
+}>();
+
+defineEmits<{
+  (e: 'updateRail'): void;
 }>();
 
 const user = ref<User | null>(null);
@@ -36,8 +39,9 @@ const userIcon = computed(() => {
         nav
       >
         <template #append>
-          <v-icon-btn id="role-info-activator" icon="mdi-information-symbol"
+          <v-btn style="opacity: 60%" variant="text" id="role-info-activator" size="small" icon="mdi-information-outline"
                       @click="dialog = true" />
+          <v-btn variant="text" size="small" icon="mdi-logout" />
         </template>
       </v-list-item>
     </v-list>
@@ -46,16 +50,16 @@ const userIcon = computed(() => {
       <v-list-item rounded="xl" prepend-icon="mdi-view-dashboard" title="Panel" to="/" />
     </v-list>
 
-    <v-list>
+    <v-list @click:open="$emit('updateRail')">
       <v-list-group value="DebtorCreditors">
         <template #activator="{ props }">
           <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-account-credit-card"
                        title="Cari" />
         </template>
         <v-list-item rounded="xl" prepend-icon="mdi-bank-transfer-out" title="Borçlular"
-                     to="dbcr/debtors" />
+                     to="/dbcr/debtors" />
         <v-list-item rounded="xl" prepend-icon="mdi-bank-transfer-in" title="Alacaklılar"
-                     to="dbcr/creditors" />
+                     to="/dbcr/creditors" />
       </v-list-group>
 
       <v-list-group value="Stock">
@@ -63,9 +67,15 @@ const userIcon = computed(() => {
           <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-cube" title="Stok" />
         </template>
 
-        <v-list-item rounded="xl" prepend-icon="mdi-truck" title="Hareket Görenler" to="/stock/moving-stock" />
-        <v-list-item rounded="xl" prepend-icon="mdi-clock" title="Hareket Görmeyenler" to="/stock/idle-stock" />
-        <v-list-item rounded="xl" prepend-icon="mdi-chart-line" title="Stok Bazlı Karlılık" to="/stock/stock-profitability" />
+        <v-list-item rounded="xl" prepend-icon="mdi-truck" to="/stock/moving-stock" >
+          <v-list-item-title>Hareket <br> Görenler</v-list-item-title>
+        </v-list-item>
+        <v-list-item rounded="xl" prepend-icon="mdi-clock" to="/stock/idle-stock" >
+          <v-list-item-title>Hareket <br> Görmeyenler</v-list-item-title>
+        </v-list-item>
+        <v-list-item rounded="xl" prepend-icon="mdi-chart-line" to="/stock/stock-profitability" >
+          <v-list-item-title>Stok Bazlı <br> Karlılık</v-list-item-title>
+        </v-list-item>
         <v-list-item rounded="xl" prepend-icon="mdi-cube-outline" title="Fiili Stok" to="/stock/physical-stock" />
       </v-list-group>
 
@@ -75,8 +85,14 @@ const userIcon = computed(() => {
                        title="Yönetim" />
         </template>
         <v-list-item rounded="xl" prepend-icon="mdi-account-group"
+                     title="Firmalar"
+                     to="/management/companies" />
+        <v-list-item rounded="xl" prepend-icon="mdi-account-group"
                      title="Kullanıcılar"
-                     to="management/users" />
+                     to="/management/users" />
+        <v-list-item rounded="xl" prepend-icon="mdi-account-group"
+                     title="Modüller"
+                     to="/management/modules" />
 
       </v-list-group>
     </v-list>

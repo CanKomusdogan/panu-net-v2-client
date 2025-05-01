@@ -12,7 +12,7 @@ defineProps<{
     <template #default="{ isActive }">
       <v-card
         max-width="400"
-        prepend-icon="mdi-information-outline"
+        prepend-icon="mdi-information"
         title="Rol İkonları"
       >
         <v-card-text>
