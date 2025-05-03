@@ -60,6 +60,8 @@ const userIcon = computed(() => {
                      to="/dbcr/debtors" />
         <v-list-item rounded="xl" prepend-icon="mdi-bank-transfer-in" title="Alacaklılar"
                      to="/dbcr/creditors" />
+        <v-list-item rounded="xl" prepend-icon="mdi-chart-pie" title="B/A Grafik"
+                     to="/dbcr/analytics" />
       </v-list-group>
 
       <v-list-group value="Stock">
@@ -78,19 +80,39 @@ const userIcon = computed(() => {
         </v-list-item>
         <v-list-item rounded="xl" prepend-icon="mdi-cube-outline" title="Fiili Stok" to="/stock/physical-stock" />
       </v-list-group>
+      <v-list-group value="Orders">
+        <template #activator="{ props }">
+          <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-clipboard" title="Siparişler" />
+        </template>
+
+        <v-list-item rounded="xl" prepend-icon="mdi-email-arrow-left" to="/orders/received-orders" >
+          <v-list-item-title>
+            Alınan
+            <br>
+            Siparişler
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item rounded="xl" prepend-icon="mdi-dolly" to="/orders/received-orders" >
+          <v-list-item-title>
+            Sevk
+            <br>
+            Edilenler
+          </v-list-item-title>
+        </v-list-item>
+      </v-list-group>
 
       <v-list-group value="Management">
         <template #activator="{ props }">
           <v-list-item v-bind="props" rounded="xl" prepend-icon="mdi-card-bulleted-settings"
                        title="Yönetim" />
         </template>
-        <v-list-item rounded="xl" prepend-icon="mdi-account-group"
+        <v-list-item rounded="xl" prepend-icon="mdi-domain"
                      title="Firmalar"
                      to="/management/companies" />
         <v-list-item rounded="xl" prepend-icon="mdi-account-group"
                      title="Kullanıcılar"
                      to="/management/users" />
-        <v-list-item rounded="xl" prepend-icon="mdi-account-group"
+        <v-list-item rounded="xl" prepend-icon="mdi-view-module"
                      title="Modüller"
                      to="/management/modules" />
 

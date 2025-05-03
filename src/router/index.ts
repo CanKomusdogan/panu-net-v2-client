@@ -4,6 +4,10 @@ import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
 import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
 import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
 import LoginView from '@/views/LoginView.vue';
+import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
+import ManagementView from '@/views/ManagementView.vue';
+import UsersTab from '@/components/Management/UsersTab.vue';
+import CompaniesTab from '@/components/Management/CompaniesTab.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -28,6 +32,10 @@ const router = createRouter({
           path: 'creditors',
           component: CreditorsTab,
         },
+        {
+          path: 'analytics',
+          component: AnalyticsTab
+        }
       ],
     },
     {
@@ -54,15 +62,15 @@ const router = createRouter({
     },
     {
       path: '/management',
-      component: HomeView,
+      component: ManagementView,
       children: [
         {
           path: 'users',
-          component: HomeView,
+          component: UsersTab,
         },
         {
           path: 'companies',
-          component: HomeView,
+          component: CompaniesTab,
         },
         {
           path: 'modules',
