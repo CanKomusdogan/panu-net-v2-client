@@ -2,6 +2,8 @@
 import { useUsersStore } from '@/stores/users.ts';
 import { storeToRefs } from 'pinia';
 import { VIconBtn } from 'vuetify/labs/components';
+import { computed, ref } from 'vue';
+import type { User } from '@/types/User.ts';
 
 const usersStore = useUsersStore();
 const { users } = storeToRefs(usersStore);
@@ -29,6 +31,14 @@ users.value = [
     role: 'admin'
   }
 ];
+
+enum ActionMode {
+  Edit, Delete, Idle
+}
+
+const selectedUser = ref<User | null>(null);
+const currentMode = ref(ActionMode.Idle);
+const showDialog = computed(() => !!(currentMode.value !== ActionMode.Idle && selectedUser));
 </script>
 
 <template>
@@ -52,10 +62,28 @@ users.value = [
         </v-card-text>
 
         <v-card-actions class="d-flex justify-end">
-          <v-icon-btn color="primary" size="small" icon="mdi-pencil" />
-          <v-icon-btn color="error" size="small" icon="mdi-trash-can" />
+          <v-icon-btn @click="selectedUser = user; currentMode = ActionMode.Edit" color="primary" variant="tonal" :size="35" icon="mdi-pencil" />
+          <v-icon-btn @click="selectedUser = user; currentMode = ActionMode.Delete" color="error" variant="tonal" :size="35" icon="mdi-trash-can" />
         </v-card-actions>
       </v-card>
     </v-col>
   </v-row>
+
+  <v-dialog v-model="showDialog" @afterLeave="selectedUser = null" max-width="400px">
+    <v-card :prepend-icon="currentMode === ActionMode.Edit ? 'mdi-pencil' : 'mdi-trash-can'" :title="currentMode === ActionMode.Edit ? 'Düzenle' : 'Sil'">
+      <v-card-text>
+        <div v-if="currentMode === ActionMode.Edit">
+          <v-text-field :label="selectedUser?.name" />
+        </div>
+        <div v-if="currentMode === ActionMode.Delete">
+          Silinen kullanıcılar geri alınamaz, devam etmek istediğinize emin misiniz?
+        </div>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-btn @click="currentMode = ActionMode.Idle" text="İptal" />
+        <v-btn text="Evet" />
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
