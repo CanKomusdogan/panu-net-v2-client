@@ -1,3 +1,4 @@
 export type MittEvents = {
-  updateRail: boolean
-}
+  updateRail: boolean;
+  cacheHit: number | null;
+};

@@ -1,13 +1,15 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
-import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
+
+import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import CreditorsTab from '@/components/DebtorsCreditors/CreditorsTab.vue';
+import DebtorsTab from '@/components/DebtorsCreditors/DebtorsTab.vue';
+import CompaniesTab from '@/components/Management/CompaniesTab.vue';
+import UsersTab from '@/components/Management/UsersTab.vue';
 import DebtorsCreditorsView from '@/views/DebtorsCreditorsView.vue';
 import LoginView from '@/views/LoginView.vue';
-import AnalyticsTab from '@/components/DebtorsCreditors/AnalyticsTab.vue';
 import ManagementView from '@/views/ManagementView.vue';
-import UsersTab from '@/components/Management/UsersTab.vue';
-import CompaniesTab from '@/components/Management/CompaniesTab.vue';
+
+import HomeView from '../views/HomeView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -18,7 +20,7 @@ const router = createRouter({
     },
     {
       path: '/login',
-      component: LoginView
+      component: LoginView,
     },
     {
       path: '/dbcr',
@@ -34,8 +36,8 @@ const router = createRouter({
         },
         {
           path: 'analytics',
-          component: AnalyticsTab
-        }
+          component: AnalyticsTab,
+        },
       ],
     },
     {
@@ -75,7 +77,7 @@ const router = createRouter({
         {
           path: 'modules',
           component: HomeView,
-        }
+        },
       ],
     },
   ],

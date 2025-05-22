@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+
 import type { Order } from '@/types/Order.ts';
 import type { ShippedOrder } from '@/types/ShippedOrder.ts';
 

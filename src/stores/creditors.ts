@@ -1,5 +1,6 @@
-import { ref } from 'vue';
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
 import type { DebtorCreditor } from '@/types/DebtorCreditor.ts';
 
 export const useCreditorsStore = defineStore('creditors', () => {

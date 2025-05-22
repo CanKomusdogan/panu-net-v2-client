@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useDebtorsStore } from '@/stores/debtors.ts';
 import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
+
+import { useDebtorsStore } from '@/stores/debtors.ts';
 import type { DebtorCreditor } from '@/types/DebtorCreditor.ts';
 
 const debtorsStore = useDebtorsStore();

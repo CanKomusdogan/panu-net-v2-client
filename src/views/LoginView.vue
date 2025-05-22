@@ -1,65 +1,63 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const email = ref('')
-const password = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const errorMessage = ref('')
-const formSubmitted = ref(false)
+import { useValidationError } from '@/composables/useValidationError.ts';
+import { emailRules, passwordRules } from '@/types/Validations.ts';
 
-const emailRules = [
-  (v: string) => !!v || 'E-posta gereklidir',
-  (v: string) => /\S+@\S+\.\S+/.test(v) || 'Geçerli bir e-posta adresi giriniz'
-]
-
-const passwordRules = [
-  (v: string) => !!v || 'Şifre gereklidir',
-  (v: string) => v.length >= 8 || 'Şifre en az 8 karakter olmalıdır'
-]
+const email = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const loading = ref(false);
+const errorMessage = ref('');
+const formSubmitted = ref(false);
 
 const isEmailValid = computed(() => {
-  if (!formSubmitted.value && !email.value) return true
-  return emailRules.every(rule => rule(email.value) === true)
-})
+  if (!formSubmitted.value && !email.value) return true;
+  return emailRules.every(rule => rule(email.value) === true);
+});
+
+const emailErrors = computed(() => useValidationError(email.value, isEmailValid.value, emailRules));
 
 const isPasswordValid = computed(() => {
-  if (!formSubmitted.value && !password.value) return true
-  return passwordRules.every(rule => rule(password.value) === true)
-})
+  if (!formSubmitted.value && !password.value) return true;
+  return passwordRules.every(rule => rule(password.value) === true);
+});
+
+const passwordErrors = computed(() =>
+  useValidationError(password.value, isPasswordValid.value, passwordRules),
+);
 
 const isFormValid = computed(() => {
-  return isEmailValid.value && isPasswordValid.value
-})
+  return isEmailValid.value && isPasswordValid.value;
+});
 
-const router = useRouter()
+const router = useRouter();
 
 const login = async () => {
-  formSubmitted.value = true
+  formSubmitted.value = true;
 
   if (!isFormValid.value) {
-    return
+    return;
   }
 
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = '';
 
   try {
     // api call to be added
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
+    console.log('Login successful', { email: email.value });
 
-    console.log('Login successful', { email: email.value })
-
-    await router.push('/')
+    await router.push('/');
   } catch (error) {
-    console.error('Login failed:', error)
-    errorMessage.value = 'Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.'
+    console.error('Login failed:', error);
+    errorMessage.value = 'Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>
 
 <template>
@@ -89,7 +87,7 @@ const login = async () => {
             label="E-posta"
             class="mb-3"
             :rules="emailRules"
-            :error-messages="!isEmailValid && email ? [emailRules.find(rule => rule(email) !== true) || ''].filter(msg => typeof msg === 'string') : []"
+            :error-messages="emailErrors"
             autocomplete="email"
             required
           />
@@ -102,7 +100,7 @@ const login = async () => {
             :type="showPassword ? 'text' : 'password'"
             label="Şifre"
             :rules="passwordRules"
-            :error-messages="!isPasswordValid && password ? [passwordRules.find(rule => rule(password) !== true) || ''].filter(msg => typeof msg === 'string') : []"
+            :error-messages="passwordErrors"
             autocomplete="current-password"
             @click:append-inner="showPassword = !showPassword"
             required

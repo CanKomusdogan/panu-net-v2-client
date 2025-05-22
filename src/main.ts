@@ -1,11 +1,11 @@
-import './assets/base.css';
-
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { createApp } from 'vue';
+
+import vuetify from '@/plugins/vuetify';
 
 import App from './App.vue';
+import './assets/base.css';
 import router from './router';
-import vuetify from '@/plugins/vuetify';
 
 const app = createApp(App);
 

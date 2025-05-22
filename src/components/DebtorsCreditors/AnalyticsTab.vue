@@ -1,25 +1,16 @@
 <script setup lang="ts">
+import { PieChart } from 'echarts/charts';
+import { LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
-import { PieChart } from 'echarts/charts';
-import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent
-} from 'echarts/components';
-import VChart, { THEME_KEY } from 'vue-echarts';
-import { ref, provide } from 'vue';
-import { useDebtorsStore } from '@/stores/debtors.ts';
-import { useCreditorsStore } from '@/stores/creditors.ts';
 import { storeToRefs } from 'pinia';
+import { provide, ref } from 'vue';
+import VChart, { THEME_KEY } from 'vue-echarts';
 
-use([
-  CanvasRenderer,
-  PieChart,
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent
-]);
+import { useCreditorsStore } from '@/stores/creditors.ts';
+import { useDebtorsStore } from '@/stores/debtors.ts';
+
+use([CanvasRenderer, PieChart, TitleComponent, TooltipComponent, LegendComponent]);
 
 provide(THEME_KEY, 'dark');
 
@@ -35,16 +26,16 @@ const totalCreditorBalance = creditors.value.reduce((sum, creditor) => sum + cre
 const option = ref({
   title: {
     text: 'B/A Analiz Grafiği',
-    left: 'center'
+    left: 'center',
   },
   tooltip: {
     trigger: 'item',
-    formatter: '{a} <br/>{b} : {c} ({d}%)'
+    formatter: '{a} <br/>{b} : {c} ({d}%)',
   },
   legend: {
     orient: 'vertical',
     left: 'left',
-    data: ['Borçlu', 'Alacaklı']
+    data: ['Borçlu', 'Alacaklı'],
   },
   series: [
     {
@@ -54,17 +45,17 @@ const option = ref({
       center: ['50%', '60%'],
       data: [
         { value: totalDebtorBalance, name: 'Borçlu' },
-        { value: totalCreditorBalance, name: 'Alacaklı' }
+        { value: totalCreditorBalance, name: 'Alacaklı' },
       ],
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
           shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
-      }
-    }
-  ]
+          shadowColor: 'rgba(0, 0, 0, 0.5)',
+        },
+      },
+    },
+  ],
 });
 </script>
 
