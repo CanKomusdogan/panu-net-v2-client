@@ -1,3 +1,4 @@
+import { MotionPlugin } from '@vueuse/motion';
 import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 
@@ -9,9 +10,12 @@ import router from './router';
 
 const app = createApp(App);
 
-app.use(createPinia());
+const pinia = createPinia();
+
+app.use(pinia);
 app.use(router);
 
 app.use(vuetify);
+app.use(MotionPlugin);
 
 app.mount('#app');

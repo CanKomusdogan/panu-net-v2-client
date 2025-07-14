@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import RoleIconsInfo from '@/components/RoleIconsInfo.vue';
-import type { User } from '@/types/User.ts';
+import type { User } from '@/types/user.ts';
 
 defineProps<{
   rail: boolean;
@@ -135,7 +135,7 @@ const userIcon = computed(() => {
             Siparişler
           </v-list-item-title>
         </v-list-item>
-        <v-list-item rounded="xl" prepend-icon="mdi-dolly" to="/orders/received-orders">
+        <v-list-item rounded="xl" prepend-icon="mdi-dolly" to="/orders/dispatched-orders">
           <v-list-item-title>
             Sevk
             <br />

@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import type { Order } from '@/types/Order.ts';
-import type { ShippedOrder } from '@/types/ShippedOrder.ts';
+import type { Order } from '@/types/order.ts';
+import type { ShippedOrder } from '@/types/shipped-order.ts';
 
 export const useOrdersStore = defineStore('orders', () => {
   const orders = ref<Order[]>([]);

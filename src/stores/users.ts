@@ -1,18 +1,32 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { getUsers } from '@/services/api-users';
-import type { User } from '@/types/User.ts';
+import { getUsers, type UserServerDataTableOptions } from '@/services/api/users';
+import type { User } from '@/types/user.ts';
 
 export const useUsersStore = defineStore('users', () => {
   const users = ref<User[]>([]);
+  const totalUsersCount = ref(0);
 
-  const loadUsers = async (limit?: number) => (users.value = await getUsers(limit));
+  const loadUsers = async (params?: UserServerDataTableOptions) => {
+    const response = await getUsers(params);
 
-  const addUserToList = (user: User) => users.value.push(user);
+    users.value = response.users;
+    totalUsersCount.value = response.total;
+  };
 
-  const updateUserById = (id: string | number, data: Partial<User>) =>
-    (users.value = users.value.map(user => (user.id === id ? { ...user, ...data } : user)));
+  const addUserToList = (user: User, addToStart = false) => {
+    if (addToStart) {
+      users.value.unshift(user);
+      return;
+    }
+
+    users.value.push(user);
+  };
+
+  const updateUserById = (id: string | number, data: Partial<User>) => {
+    users.value = users.value.map(user => (user.id === id ? { ...user, ...data } : user));
+  };
 
   const removeUsersById = (ids: Array<string | number>) => {
     const idSet = new Set(ids);
@@ -20,5 +34,5 @@ export const useUsersStore = defineStore('users', () => {
     users.value = users.value.filter(user => !idSet.has(user.id ?? -1));
   };
 
-  return { users, loadUsers, addUserToList, updateUserById, removeUsersById };
+  return { users, totalUsersCount, loadUsers, addUserToList, updateUserById, removeUsersById };
 });

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useValidationError } from '@/composables/useValidationError.ts';
-import { emailRules, passwordRules } from '@/types/Validations.ts';
+import { emailRules, passwordRules } from '@/types/validations.ts';
 
 const email = ref('');
 const password = ref('');

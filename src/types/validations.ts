@@ -5,5 +5,4 @@ export const emailRule = (v: string) =>
 export const passwordRule = (v: string) => v.length >= 8 || 'Şifre en az 8 karakter olmalıdır';
 
 export const emailRules = [noEmptyRule, emailRule];
-
 export const passwordRules = [noEmptyRule, passwordRule];

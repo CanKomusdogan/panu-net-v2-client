@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export const useOptionsStore = defineStore('options', () => {
-  const options = ref(null);
+import type { AppOptions } from '@/types/app-options.ts';
 
-  return { options };
+export const useAppOptionsStore = defineStore('appOptions', () => {
+  const appOptions = ref<AppOptions>({ giveCacheFeedback: true });
+
+  return { appOptions };
 });

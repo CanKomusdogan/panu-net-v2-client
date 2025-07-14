@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { VIconBtn } from 'vuetify/labs/components';
 
-import GixCacheFeedback from '@/components/GixCacheFeedback.vue';
+import CompanySelect from '@/components/CompanySelect.vue';
 import GixFooter from '@/components/GixFooter.vue';
+import GixSnackbar from '@/components/GixSnackbar.vue';
 import NavigationDrawer from '@/components/NavigationDrawer.vue';
+import { useSnackbarStore } from '@/stores/snackbar.ts';
 
 const router = useRouter();
 
 const rail = ref(true);
+
+const { snackbar, snackbarText, snackbarError } = storeToRefs(useSnackbarStore());
 </script>
 
 <template>
@@ -29,11 +34,19 @@ const rail = ref(true);
           ><span class="panu-font font-italic" style="color: var(--color-panu)">Net</span>
           <strong class="pa-2 rounded-pill version-text">V2</strong>
         </v-app-bar-title>
+
+        <v-spacer />
+
+        <CompanySelect />
       </v-app-bar>
       <v-main>
         <v-container>
-          <GixCacheFeedback />
           <router-view />
+          <GixSnackbar
+            v-model:snackbar="snackbar"
+            v-model:text="snackbarText"
+            v-model:error="snackbarError"
+          />
         </v-container>
       </v-main>
     </v-layout>

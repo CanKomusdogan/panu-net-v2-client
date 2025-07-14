@@ -1,8 +1,67 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export const useCompaniesStore = defineStore('companies', () => {
-  const companies = ref(null);
+import {
+  type CompanyServerDataTableOptions,
+  getCompanies,
+  getSelectedCompany,
+} from '@/services/api/companies.ts';
+import type { Company } from '@/types/company.ts';
 
-  return { companies };
+export const useCompaniesStore = defineStore('companies', () => {
+  const companies = ref<Company[]>([]);
+  const totalCompaniesCount = ref(0);
+  const selectedCompanyId = ref<number | null>(null);
+  const selectedCompanyIdLoaded = ref(false);
+
+  const getSelectedCompanyInstance = () =>
+    companies.value.find(c => c.id === selectedCompanyId.value);
+  const loadSelectedCompanyId = async () => {
+    try {
+      selectedCompanyId.value = Number((await getSelectedCompany()).id) ?? null;
+    } catch {
+      selectedCompanyId.value = null;
+    } finally {
+      selectedCompanyIdLoaded.value = true;
+    }
+  };
+  const loadCompanies = async (params?: CompanyServerDataTableOptions) => {
+    const result = await getCompanies(params);
+
+    companies.value = result.companies;
+    totalCompaniesCount.value = result.total;
+  };
+
+  const addCompanyToList = (company: Company, addToStart = false) => {
+    if (addToStart) {
+      companies.value.unshift(company);
+      return;
+    }
+
+    companies.value.push(company);
+  };
+
+  const updateCompanyById = (id: string | number, data: Partial<Company>) => {
+    companies.value = companies.value.map(company =>
+      company.id === id ? { ...company, ...data } : company,
+    );
+  };
+
+  const removeCompaniesById = (ids: Array<string | number>) => {
+    const idSet = new Set(ids);
+    companies.value = companies.value.filter(company => !idSet.has(company.id ?? -1));
+  };
+
+  return {
+    companies,
+    totalCompaniesCount,
+    selectedCompanyId,
+    selectedCompanyIdLoaded,
+    loadCompanies,
+    addCompanyToList,
+    updateCompanyById,
+    removeCompaniesById,
+    getSelectedCompanyInstance,
+    loadSelectedCompanyId,
+  };
 });

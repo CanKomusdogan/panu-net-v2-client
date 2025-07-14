@@ -80,6 +80,20 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/orders',
+      component: HomeView,
+      children: [
+        {
+          path: 'received-orders',
+          component: HomeView,
+        },
+        {
+          path: 'dispatched-orders',
+          component: HomeView,
+        },
+      ],
+    },
   ],
 });
 

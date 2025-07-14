@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed } from 'vue';
+import { useDisplay } from 'vuetify';
 
 export const useDisplayStore = defineStore('display', () => {
-  const display = ref(null);
+  const display = useDisplay();
+  const mobile = computed(() => display.smAndDown);
 
-  return { display };
+  return { display, mobile };
 });

@@ -14,6 +14,7 @@ export default defineConfigWithVueTs(
   {
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue}'],
+    rules: { '@typescript-eslint/no-floating-promises': 'error' /* 'no-console': 'warn' */ },
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
