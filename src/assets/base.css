@@ -90,16 +90,16 @@ body {
 @font-face {
   font-family: 'Rogue Sans';
   src:
-    url('rogue-sans-medium-regular.ttf') format('truetype'),
-    url('rogue-sans-medium-regular.ttf') format('truetype');
+    url('rogue-sans-medium-regular.woff2') format('woff'),
+    url('rogue-sans-medium-regular.woff2') format('woff');
   font-weight: normal;
   font-style: normal;
 }
 @font-face {
   font-family: 'Rogue Sans';
   src:
-    url('rogue-sans-medium-italic.ttf') format('truetype'),
-    url('rogue-sans-medium-italic.ttf') format('truetype');
+    url('rogue-sans-medium-italic.woff2') format('woff'),
+    url('rogue-sans-medium-italic.woff2') format('woff');
   font-weight: normal;
   font-style: italic;
 }

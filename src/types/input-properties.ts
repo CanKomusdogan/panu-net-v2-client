@@ -1,6 +1,6 @@
-// the pattern is to use label as a key so make sure to use unique label names
 export interface InputProperties {
-  type: string;
+  id: string;
+  type: 'text' | 'number' | 'tel' | 'email' | 'password' | 'date' | 'checkbox' | 'url' | 'search';
   label: string;
   icon?: string;
   hint?: string;
@@ -8,4 +8,5 @@ export interface InputProperties {
   counter?: number;
   value: string;
   validationRules?: ((v: string) => true | string)[];
+  neverResetValue?: boolean;
 }

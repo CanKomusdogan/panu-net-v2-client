@@ -2,19 +2,17 @@
 import { computed, ref } from 'vue';
 import { VIconBtn } from 'vuetify/labs/components';
 
-interface ObjectWithId {
-  [key: string]: unknown;
-}
+type ObjectType = Record<string, unknown>;
 
 defineEmits<{
   (e: 'submit', selectedIds: number[]): void;
   (e: 'update:selectedIds', selectedIds: number[]): void;
-  (e: 'select', object: ObjectWithId): void;
+  (e: 'select', object: ObjectType): void;
 }>();
 
 const props = defineProps<{
   selectedIds: number[];
-  objects: ObjectWithId[];
+  objects: ObjectType[];
   idProperty?: string;
   nameProperty?: string;
   snackbarColor?: string;
@@ -26,11 +24,11 @@ const props = defineProps<{
 const idProp = computed(() => props.idProperty ?? 'id');
 const nameProp = computed(() => props.nameProperty ?? 'name');
 
-const getProp = (obj: ObjectWithId, prop: string) => {
+const getProp = (obj: ObjectType, prop: string) => {
   return obj[prop];
 };
 
-const getKey = (obj: ObjectWithId, prop: string): PropertyKey => {
+const getKey = (obj: ObjectType, prop: string): PropertyKey => {
   const value = obj[prop];
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'symbol') {
     return value;

@@ -1,9 +1,14 @@
+import DateFnsAdapter from '@date-io/date-fns';
 import '@mdi/font/css/materialdesignicons.css';
+import { tr } from 'date-fns/locale/tr';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi';
 import 'vuetify/styles';
 
 export default createVuetify({
+  date: {
+    adapter: new DateFnsAdapter({ locale: tr }),
+  },
   icons: {
     defaultSet: 'mdi',
     aliases,

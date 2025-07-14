@@ -1,22 +1,38 @@
 <script setup lang="ts">
-import { isAxiosError } from 'axios';
+import { useMotion } from '@vueuse/motion';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
+import { computed, ref } from 'vue';
 import { VIconBtn } from 'vuetify/labs/components';
 
 import GixCrudDialog from '@/components/GixCrudDialog.vue';
 import GixSelectionInfoBar from '@/components/GixSelectionInfoBar.vue';
-import GixSnackbar from '@/components/GixSnackbar.vue';
-import { createUser, deleteUser, deleteUsers, patchUser } from '@/services/api-users.ts';
+import GixTogglerMenu from '@/components/GixTogglerMenu.vue';
+import {
+  createUser,
+  deleteUser,
+  deleteUsers,
+  patchUser,
+  type UserServerDataTableOptions
+} from '@/services/api/users.ts';
+import { useDisplayStore } from '@/stores/display.ts';
+import { useAppOptionsStore } from '@/stores/options.ts';
 import { useUsersStore } from '@/stores/users.ts';
-import { ActionMode } from '@/types/ActionMode.ts';
-import type { InputProperties } from '@/types/InputProperties.ts';
-import type { User } from '@/types/User.ts';
-import { emailRules, noEmptyRule, passwordRules } from '@/types/Validations.ts';
+import { ActionMode } from '@/types/action-mode.ts';
+import type { DataTableHeaders } from '@/types/data-table-headers.ts';
+import type { InputProperties } from '@/types/input-properties.ts';
+import type { User } from '@/types/user.ts';
+import { emailRules, noEmptyRule, passwordRules } from '@/types/validations.ts';
 import { formatDateTime } from '@/utils/formatting.ts';
+import type { WithRequiredProperty } from '@/types/with-required-property.ts';
+
+const { mobile } = storeToRefs(useDisplayStore());
+
+const appOptionsStore = useAppOptionsStore();
+const { appOptions } = storeToRefs(appOptionsStore);
 
 const usersStore = useUsersStore();
-const { users } = storeToRefs(usersStore);
+const { users, totalUsersCount } = storeToRefs(usersStore);
 
 const selectedUser = ref<User | null>(null);
 const selectedUserIds = ref<number[]>([]);
@@ -30,14 +46,22 @@ const showCrudDialog = computed(() => {
   return !!(selectedUser.value || selectedUserIds.value.length > 0);
 });
 
+const userInputPropertiesIds = {
+  name: uuidv4(),
+  email: uuidv4(),
+  password: uuidv4(),
+};
+
 const userInputProperties = ref<InputProperties[]>([
   {
+    id: userInputPropertiesIds.name,
     label: 'Ad',
     type: 'text',
     validationRules: [noEmptyRule],
     value: '',
   },
   {
+    id: userInputPropertiesIds.email,
     label: 'E-posta',
     type: 'email',
     icon: 'mdi-email',
@@ -45,6 +69,7 @@ const userInputProperties = ref<InputProperties[]>([
     value: '',
   },
   {
+    id: userInputPropertiesIds.password,
     label: 'Parola',
     type: 'password',
     showPassword: false,
@@ -56,24 +81,21 @@ const userInputProperties = ref<InputProperties[]>([
 
 const dialogErrorMessage = ref('');
 
-const snackbarText = ref('');
-const snackbarError = ref(false);
-
 const usersLoaded = ref(false);
 
-onMounted(async () => {
+const loadUsers = async (options?: UserServerDataTableOptions, giveCacheFeedback = true) => {
+  const cacheFeedbackPreference = appOptions.value.giveCacheFeedback;
+  appOptions.value.giveCacheFeedback = giveCacheFeedback;
   try {
-    if (usersStore.users.length > 0) return;
-    await usersStore.loadUsers();
+    await usersStore.loadUsers(options);
   } catch (error) {
     console.error(error);
-    snackbarError.value = true;
-    snackbarText.value =
-      'Kullanıcılar getirilirken beklenmeyen bir hata ile karşılaşıldı. Sayfayı yenileyin.';
   } finally {
     usersLoaded.value = true;
+
+    appOptions.value.giveCacheFeedback = cacheFeedbackPreference;
   }
-});
+};
 
 const dialogSubmit = async (inputProperties: InputProperties[]) => {
   if (selectedUserIds.value.length > 0 && currentMode.value === ActionMode.Delete) {
@@ -83,26 +105,32 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
 
   const formUser = (): Partial<User> => {
     return {
-      name: inputProperties.find(input => input.type === 'text')?.value,
-      email: inputProperties.find(input => input.type === 'email')?.value,
-      password: inputProperties.find(input => input.type === 'password')?.value,
+      name: inputProperties[0].value,
+      email: inputProperties[1].value,
+      password: inputProperties[2].value,
       role: 'user',
     };
   };
+
+  const willUpdateNextRefreshText = 'Sonraki güncellemede yenilenecektir';
 
   try {
     switch (currentMode.value) {
       case ActionMode.Create:
         const user = formUser();
-        if (user.name && user.email && user.password && user.role) {
-          const fullUser: User = {
-            name: user.name,
-            email: user.email,
-            password: user.password,
-            role: user.role,
+
+        const isValidUser = Object.values(user).every(Boolean);
+        if (isValidUser) {
+          await createUser(user as WithRequiredProperty<User, 'password'>);
+
+          const latestUserId = users.value[0].id;
+
+          const displayUser = {
+            ...(user as User),
+            id: latestUserId ? latestUserId + 1 : latestUserId,
+            creationDate: willUpdateNextRefreshText,
           };
-          await createUser(fullUser);
-          usersStore.addUserToList(fullUser);
+          usersStore.addUserToList(displayUser, true);
         }
         break;
       case ActionMode.Edit:
@@ -115,8 +143,8 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
         editedUser = {
           ...selectedUser.value,
           ...Object.fromEntries(Object.entries(editedUser).filter(([, v]) => v !== '')),
+          updatedOn: willUpdateNextRefreshText,
         };
-        editedUser.updatedOn = 'Sonraki güncellemede yenilenecektir';
         usersStore.updateUserById(selectedUser.value.id, editedUser);
         break;
       case ActionMode.Delete:
@@ -128,13 +156,8 @@ const dialogSubmit = async (inputProperties: InputProperties[]) => {
       default:
         break;
     }
-
-    snackbarError.value = false;
-    snackbarText.value = 'Değişiklikler kaydedildi.';
   } catch (error) {
     console.error(error);
-    snackbarError.value = true;
-    snackbarText.value = 'İşlem yapılırken bir hata ile karşılaşıldı.';
   }
 };
 
@@ -144,43 +167,68 @@ const batchDelete = async () => {
   try {
     await deleteUsers(selectedUserIds.value);
     usersStore.removeUsersById(selectedUserIds.value);
-
-    snackbarError.value = false;
-    snackbarText.value = '';
   } catch (error) {
     console.error(error);
-    snackbarError.value = true;
-    snackbarText.value = `Kullanıcılar silinirken bir hata ile karşılaşıldı. ${isAxiosError(error) ? error.response?.data.message : ''}`;
   }
 };
 
-const dataTableHeaders = ref([
-  { title: '', key: 'avatar', sortable: false },
-  { title: 'ID', key: 'id', sortable: true },
-  { title: 'Ad', key: 'name', sortable: true },
-  { title: 'E-posta', key: 'email', sortable: false },
-  { title: 'Rol', key: 'role', sortable: true },
-  { title: 'Telefon', key: 'phone', sortable: false },
-  { title: 'Oluşturulma Tarihi', key: 'creationDate', sortable: true },
-  { title: 'Düzenlenme Tarihi', key: 'updatedOn', sortable: true },
-  { title: 'İşlemler', key: 'actions', sortable: false },
+const dataTableHeaders = ref<DataTableHeaders[]>([
+  { title: 'ID', key: 'id', sortable: true, toggled: true },
+  { title: 'Ad', key: 'name', sortable: true, toggled: true },
+  { title: 'E-posta', key: 'email', sortable: false, toggled: true },
+  { title: 'Rol', key: 'role', sortable: true, toggled: true },
+  { title: 'Telefon', key: 'phone', sortable: false, toggled: false },
+  { title: 'Oluşturulma Tarihi', key: 'creationDate', sortable: true, toggled: true },
+  { title: 'Düzenlenme Tarihi', key: 'updatedOn', sortable: true, toggled: true },
+  { title: 'İşlemler', key: 'actions', sortable: false, toggled: true },
 ]);
+
+const includedDataTableHeaders = computed(() =>
+  dataTableHeaders.value.filter(header => header.toggled),
+);
+
+const refreshRotations = ref(1);
+
+const refreshing = ref(false);
+const refreshBtnTarget = ref<HTMLElement | null>(null);
+
+const { apply } = useMotion(refreshBtnTarget, {
+  initial: {
+    rotate: 0,
+  },
+});
+
+const toggleRefresh = async () => {
+  if (refreshing.value) return;
+  refreshing.value = true;
+  await apply({
+    rotate: 360 * refreshRotations.value,
+    transition: {
+      ease: 'easeOut',
+    },
+  });
+  refreshRotations.value++;
+  await loadUsers();
+  refreshing.value = false;
+};
 </script>
 
 <template>
-  <v-data-table-virtual
+  <v-data-table-server
+    v-model="selectedUserIds"
+    @update:options="options => loadUsers(options, false)"
+    :headers="includedDataTableHeaders"
+    :items-length="totalUsersCount"
     :items="users"
-    :headers="dataTableHeaders"
-    item-key="id"
-    :item-height="50"
     :loading="!usersLoaded"
+    class="rounded-lg elevation-0 border"
+    fixed-header
+    hover
+    :mobile="mobile.value"
     loading-text="Kullanıcılar yükleniyor..."
     no-data-text="Kullanıcılar bulunamadı."
-    fixed-header
-    class="rounded-lg elevation-0 border"
-    density="comfortable"
+    items-per-page-text="Sayfa başı kullanıcılar"
     show-select
-    v-model="selectedUserIds"
   >
     <template #top>
       <v-toolbar flat rounded class="rounded-b-0">
@@ -189,22 +237,31 @@ const dataTableHeaders = ref([
           Kullanıcılar
         </v-toolbar-title>
 
+        <GixTogglerMenu
+          menu-activator-btn-text="Filtrele"
+          menu-activator-btn-class="rounded-lg border me-3"
+          menu-activator-btn-icon="mdi-filter-variant"
+          v-model:toggle-items="dataTableHeaders"
+        />
         <v-btn
           rounded="lg"
           @click="currentMode = ActionMode.Create"
-          class="me-2"
+          class="me-3"
           border
           prepend-icon="mdi-account-plus"
-          text="Ekle"
+        >
+          Ekle
+        </v-btn>
+
+        <v-icon-btn
+          v-motion
+          ref="refreshBtnTarget"
+          @click="toggleRefresh"
+          variant="text"
+          class="me-3"
+          icon="mdi-refresh"
         />
       </v-toolbar>
-    </template>
-    <template #[`item.avatar`]="{ item }">
-      <div class="flex items-center">
-        <v-avatar color="primary" size="32">
-          <span style="user-select: none">{{ item.name[0] }}</span>
-        </v-avatar>
-      </div>
     </template>
     <template #[`item.creationDate`]="{ item }">
       {{ item.creationDate ? formatDateTime(item.creationDate) : '' }}
@@ -213,7 +270,7 @@ const dataTableHeaders = ref([
       {{ item.updatedOn ? formatDateTime(item.updatedOn) : 'Düzenlenmedi' }}
     </template>
     <template #[`item.actions`]="{ item }">
-      <div class="d-flex">
+      <div class="d-flex justify-end">
         <v-icon-btn
           icon="mdi-pencil"
           color="secondary"
@@ -234,7 +291,7 @@ const dataTableHeaders = ref([
         />
       </div>
     </template>
-  </v-data-table-virtual>
+  </v-data-table-server>
 
   <GixCrudDialog
     v-model:show-dialog="showCrudDialog"
@@ -244,8 +301,6 @@ const dataTableHeaders = ref([
     @submit="dialogSubmit"
     :error-message="dialogErrorMessage"
   />
-
-  <GixSnackbar v-model:text="snackbarText" v-model:error="snackbarError" />
 
   <GixSelectionInfoBar
     @submit="currentMode = ActionMode.Delete"

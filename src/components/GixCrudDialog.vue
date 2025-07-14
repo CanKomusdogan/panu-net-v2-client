@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { format } from 'date-fns';
+import { computed, ref, watch } from 'vue';
+import { VDateInput } from 'vuetify/labs/components';
 
 import { useValidationError } from '@/composables/useValidationError.ts';
-import { ActionMode } from '@/types/ActionMode.ts';
-import type { InputProperties } from '@/types/InputProperties.ts';
+import { ActionMode } from '@/types/action-mode.ts';
+import type { InputProperties } from '@/types/input-properties.ts';
+import type { StepperProperties } from '@/types/stepper-properties.ts';
 
 const emit = defineEmits<{
   (e: 'afterLeave'): void;
@@ -16,9 +19,11 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   showDialog: boolean;
+  maxDialogWidth?: number | string;
   currentMode: ActionMode;
   deleteText?: string;
   inputsProperties: InputProperties[];
+  stepperProperties?: StepperProperties[];
   errorMessage: string;
 }>();
 
@@ -33,20 +38,27 @@ const internalCurrentMode = computed({
 
 const errorMessage = ref(props.errorMessage);
 
+watch(
+  () => props.errorMessage,
+  val => {
+    errorMessage.value = val;
+  },
+);
+
 const isSubmitting = ref(false);
 const formSubmitted = ref(false);
 
-const updateInputsPropertiesValue = (event: Event, label: string) => {
-  const value = (event.target as HTMLInputElement).value;
+const updateInputsPropertiesValue = (value: string | number | boolean | null, id: string) => {
+  const strVal = String(value ?? '');
   const newInputsProperties = props.inputsProperties.map(input =>
-    input.label === label ? { ...input, value } : input,
+    input.id === id ? { ...input, value: strVal } : input,
   );
 
   emit('update:inputsProperties', newInputsProperties);
 };
-const updateInputsPropertiesShowPassword = (value: boolean, label: string) => {
+const updateInputsPropertiesShowPassword = (value: boolean, id: string) => {
   const newInputsProperties = props.inputsProperties.map(input =>
-    input.label === label ? { ...input, showPassword: value } : input,
+    input.id === id ? { ...input, showPassword: value } : input,
   );
 
   emit('update:inputsProperties', newInputsProperties);
@@ -74,12 +86,17 @@ const handleSubmit = async () => {
 
 const resetForm = () => {
   formSubmitted.value = false;
+  errorMessage.value = '';
 
-  const newInputsProperties = props.inputsProperties.map(inputProps => ({
-    ...inputProps,
-    value: '',
-    showPassword: inputProps.type === 'password' ? false : inputProps.showPassword,
-  }));
+  const newInputsProperties = props.inputsProperties.map(inputProps => {
+    if (inputProps.neverResetValue) return inputProps;
+
+    return {
+      ...inputProps,
+      value: '',
+      showPassword: inputProps.type === 'password' ? false : inputProps.showPassword,
+    };
+  });
 
   emit('update:inputsProperties', newInputsProperties);
 };
@@ -114,6 +131,32 @@ const cardTitle = computed(() => {
       return internalCurrentMode.value;
   }
 });
+
+const textInputTypes = ['text', 'tel', 'email', 'password', 'url', 'search'];
+
+const updateDateInputValue = (newDate: Date, id: string) => {
+  const newInputsProperties = props.inputsProperties.map(inputProps =>
+    inputProps.id === id
+      ? {
+          ...inputProps,
+          value: newDate.toISOString(),
+        }
+      : inputProps,
+  );
+
+  emit('update:inputsProperties', newInputsProperties);
+};
+
+const defaultStepperProperties = computed(() => [
+  {
+    step: 1,
+    inputIds: props.inputsProperties.map(p => p.id),
+    title: 'Alanlar',
+  },
+]);
+
+const getRules = (inputProperties: InputProperties) =>
+  props.currentMode === ActionMode.Create ? inputProperties.validationRules || [] : [];
 </script>
 
 <template>
@@ -123,7 +166,7 @@ const cardTitle = computed(() => {
       resetForm();
       $emit('afterLeave');
     "
-    max-width="400px"
+    :max-width="`${maxDialogWidth ?? '400'}px`"
     aria-labelledby="crud-dialog-title"
   >
     <v-card rounded="lg">
@@ -137,57 +180,114 @@ const cardTitle = computed(() => {
             {{ errorMessage }}
           </v-alert>
           <div v-if="isForm">
-            <v-text-field
-              v-for="inputProperties in inputsProperties"
-              :key="inputProperties.label"
-              :label="inputProperties.label"
-              :type="
-                inputProperties.type === 'password'
-                  ? inputProperties.showPassword
-                    ? 'text'
-                    : 'password'
-                  : inputProperties.type
-              "
-              :value="inputProperties.value"
-              :prepend-inner-icon="inputProperties.icon"
-              :append-icon="
-                inputProperties.type === 'password'
-                  ? !inputProperties.showPassword
-                    ? 'mdi-eye'
-                    : 'mdi-eye-off'
-                  : undefined
-              "
-              @click:append="
-                () =>
-                  updateInputsPropertiesShowPassword(
-                    !(inputProperties.showPassword ?? false),
-                    inputProperties.label,
-                  )
-              "
-              :hint="inputProperties.hint"
-              :counter="inputProperties.counter"
-              :rules="
-                currentMode === ActionMode.Create ? inputProperties.validationRules || [] : []
-              "
-              :error-messages="
-                inputProperties.validationRules && currentMode === ActionMode.Create
-                  ? useValidationError(
-                      inputProperties.value ?? '',
-                      !formSubmitted
-                        ? true
-                        : inputProperties.validationRules?.every(
-                            rule => rule(inputProperties.value ?? '') === true,
-                          ),
-                      inputProperties.validationRules,
-                    )
-                  : []
-              "
-              :class="inputProperties.validationRules ? 'mb-3' : ''"
-              variant="outlined"
+            <v-stepper
+              editable
+              :items="stepperProperties?.map(p => p.title) ?? defaultStepperProperties"
+              :hide-actions="!stepperProperties"
               rounded="lg"
-              @input="(e: Event) => updateInputsPropertiesValue(e, inputProperties.label)"
-            />
+              prev-text="Önceki"
+              next-text="Sonraki"
+            >
+              <template
+                v-for="property in stepperProperties ?? defaultStepperProperties"
+                :key="property.title"
+                #[`item.${property.step}`]
+              >
+                <div
+                  v-for="inputProperties in inputsProperties.filter(p =>
+                    property.inputIds.includes(p.id),
+                  )"
+                  :key="inputProperties.id"
+                  class="mt-1"
+                >
+                  <v-date-input
+                    v-if="inputProperties.type === 'date'"
+                    :display-format="(date: Date) => format(date, 'dd.MM.yyyy')"
+                    label="Lisans Tarihi"
+                    placeholder="gg.aa.yyyy"
+                    variant="outlined"
+                    rounded="lg"
+                    :rules="getRules(inputProperties)"
+                    @update:model-value="
+                      newDate => updateDateInputValue(new Date(newDate), inputProperties.id)
+                    "
+                  />
+
+                  <v-checkbox
+                    v-if="inputProperties.type === 'checkbox'"
+                    :label="inputProperties.label"
+                    :model-value="inputProperties.value === 'true'"
+                    @update:model-value="
+                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+
+                  <v-number-input
+                    v-if="inputProperties.type === 'number'"
+                    :label="inputProperties.label"
+                    variant="outlined"
+                    rounded="lg"
+                    inset
+                    :rules="getRules(inputProperties)"
+                    @update:model-value="
+                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+
+                  <v-text-field
+                    v-if="textInputTypes.includes(inputProperties.type)"
+                    :label="inputProperties.label"
+                    :type="
+                      inputProperties.type === 'password'
+                        ? inputProperties.showPassword
+                          ? 'text'
+                          : 'password'
+                        : inputProperties.type
+                    "
+                    :value="inputProperties.value"
+                    :prepend-inner-icon="inputProperties.icon"
+                    :append-inner-icon="
+                      inputProperties.type === 'password'
+                        ? !inputProperties.showPassword
+                          ? 'mdi-eye'
+                          : 'mdi-eye-off'
+                        : undefined
+                    "
+                    @click:append-inner="
+                      () =>
+                        updateInputsPropertiesShowPassword(
+                          !(inputProperties.showPassword ?? false),
+                          inputProperties.id,
+                        )
+                    "
+                    :hint="inputProperties.hint"
+                    :counter="inputProperties.counter"
+                    :rules="getRules(inputProperties)"
+                    :error-messages="
+                      inputProperties.validationRules && currentMode === ActionMode.Create
+                        ? useValidationError(
+                            inputProperties.value,
+                            !formSubmitted
+                              ? true
+                              : inputProperties.validationRules?.every(
+                                  rule => rule(inputProperties.value) === true,
+                                ),
+                            inputProperties.validationRules,
+                          )
+                        : []
+                    "
+                    :class="inputProperties.validationRules ? 'mb-3' : ''"
+                    variant="outlined"
+                    rounded="lg"
+                    @update:model-value="
+                      value => updateInputsPropertiesValue(value, inputProperties.id)
+                    "
+                  />
+                </div>
+              </template>
+            </v-stepper>
           </div>
+
           <div v-else-if="internalCurrentMode === ActionMode.Delete">
             <span v-if="deleteText">{{ deleteText }}</span>
             <span v-else> Silinenler geri alınamaz, devam etmek istediğinize emin misiniz? </span>
